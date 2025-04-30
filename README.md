@@ -2,6 +2,12 @@
 
 ## building
 
+```
+
+go get gopkg.in/yaml.v3
+
+```
+
 ## board file
 
 ## config 

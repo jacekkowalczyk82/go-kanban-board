@@ -5,6 +5,7 @@ import (
     //"time"
     "fmt"
     "os"
+	"gopkg.in/yaml.v3"
 
 )
 
@@ -36,6 +37,7 @@ func ShowUsage() {
     fmt.Println("    go-board.exe --onhold <ID>      # moves the task with id to the OnHole lane")
     fmt.Println("    go-board.exe --done <ID>        # moves the task with id to the Done lane")
     fmt.Println("    go-board.exe --archive <ID>     # moves the task with id to archived board")
+    fmt.Println("    go-board.exe --print            # prints the board")
     fmt.Println("    go-board.exe --help             # shows this help")
 
 	fmt.Println("\nAll aguments you provided: ")
@@ -43,10 +45,75 @@ func ShowUsage() {
 
 }
 
+// ReadConfig reads config.yaml if it exists and returns its contents as a map
+func ReadConfig(filePath string) (map[string]interface{}, error) {
+	// Check if file exists
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return nil, fmt.Errorf("config file %s does not exist", filePath)
+	}
+
+	// Read the file
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("error reading config file: %v", err)
+	}
+
+	// Unmarshal YAML into map
+	var config map[string]interface{}
+	err = yaml.Unmarshal(data, &config)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing YAML: %v", err)
+	}
+
+	return config, nil
+}
+
+
+// WriteConfig writes a map to a YAML file
+func WriteConfig(filePath string, config map[string]interface{}) error {
+	// Marshal the map to YAML
+	data, err := yaml.Marshal(config)
+	if err != nil {
+		return fmt.Errorf("error marshaling to YAML: %v", err)
+	}
+
+	// Write to file
+	err = os.WriteFile(filePath, data, 0644)
+	if err != nil {
+		return fmt.Errorf("error writing to file %s: %v", filePath, err)
+	}
+
+	return nil
+}
+
+func testConfigFile() {
+    // Example configuration data
+	config := map[string]interface{}{
+		"server": map[string]interface{}{
+			"host": "localhost",
+			"port": 8080,
+		},
+		"database": map[string]interface{}{
+			"name": "mydb",
+			"user": "admin",
+		},
+		"debug": true,
+	}
+
+	// Write to config.yaml
+	err := WriteConfig("config.yaml", config)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return
+	}
+
+	fmt.Println("Successfully wrote config to config.yaml")
+}
+
 
 func main() {
     
-
+    testConfigFile()
     // // Initial data
     // board := KanbanBoard{
     //     ToDo: []Task{
@@ -72,19 +139,62 @@ func main() {
 	fmt.Println("only arguments: ",argsWithoutProgramName)
 	fmt.Println("\n");
 	fmt.Println("-------------------------------------------------------");
-	if len(os.Args) == 3 || len(os.Args) == 4 { 
-		// 2 or 3  arguments
+    correctParams:=false
+
+	if len(os.Args) == 2 {
+		// 1 arguments
 		
 		operation := os.Args[1];
-		taskId := os.Args[2];
-		taskDescription := os.Args[3];
+		
 		
         fmt.Println("Arguments OK: ",argsWithoutProgramName)
 
-        fmt.Println("Arguments OK: ",operation, taskId, taskDescription)
+        fmt.Println("Arguments OK: ",operation )
+        correctParams = true;
         
-    }
+    } else if len(os.Args) == 3 { 
+		//  2  arguments
+		
+		operation := os.Args[1];
+		taskId := os.Args[2];
+		
+		
+        fmt.Println("Arguments OK: ",argsWithoutProgramName)
 
+        fmt.Println("Arguments OK: ",operation, taskId)
+
+        correctParams = true;
+        
+    } else if len(os.Args) == 4 { 
+        // 3  arguments
+        
+        operation := os.Args[1];
+        taskId := os.Args[2];
+        taskDescription := os.Args[3];
+        
+        fmt.Println("Arguments OK: ",argsWithoutProgramName)
+
+        fmt.Println("Arguments OK: ",operation, taskId, taskDescription)
+
+        correctParams = true;
+            
+    } 
+    
+    
+    if correctParams {
+        fmt.Println("Arguments OK: ")
+
+        config, err := ReadConfig("config.yaml")
+        if err != nil {
+            fmt.Printf("Error: %v\n", err)
+            return
+        }
+
+        // Print the config map
+        fmt.Printf("Config contents: %+v\n", config)
+    } else {
+        ShowUsage()
+    }
 
 
 }
