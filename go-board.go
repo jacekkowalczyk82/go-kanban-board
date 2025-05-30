@@ -6,8 +6,12 @@ import (
     "fmt"
     "os"
 	"gopkg.in/yaml.v3"
+    "time"
 
 )
+
+var CONST_TIME_FORMAT = "2006-01-02 15:04:05"
+var CONST_DATE_FORMAT = "2006-01-02"
 
 var debugEnabled bool = false;
 var version string = "0.1";
@@ -22,6 +26,14 @@ type KanbanBoard struct {
     InProgress  []Task
     Review      []Task
     Done        []Task
+}
+
+func getTimeNowString() string {
+    currentTime := time.Now()
+
+	//currentTimeUnixSeconds := currentTime.Unix()
+    return currentTime.Format(CONST_TIME_FORMAT)
+
 }
 
 
@@ -101,6 +113,38 @@ func testConfigFile() {
 	}
 
 	// Write to config.yaml
+	err := WriteConfig("test-config.yaml", config)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return
+	}
+
+	fmt.Println("Successfully wrote config to test-config.yaml")
+}
+
+
+func writeConfigFile(boardFilePath string, modificatioDateTime string) {
+    // Example configuration data
+	config := map[string]interface{}{
+        "kanban-board-file": "",
+        "archived-kanban-board-file": "_archived.json",
+        "board-config-modification-time": "",
+		"dummy-server": map[string]interface{}{
+			"host": "localhost",
+			"port": 8080,
+		},
+		"dummy-database": map[string]interface{}{
+			"name": "mydb",
+			"user": "admin",
+		},
+		"debug": true,
+	}
+
+    config["kanban-board-file"] = boardFilePath;
+    config["archived-kanban-board-file"] = boardFilePath + "_archived.json";
+    config["board-config-modification-time"] = modificatioDateTime;
+
+	// Write to config.yaml
 	err := WriteConfig("config.yaml", config)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
@@ -111,9 +155,30 @@ func testConfigFile() {
 }
 
 
+func testReadConfigFile() {
+    // Example configuration data
+	
+
+	// Read to config.yaml
+    // var config := map[string]interface{}
+	config, err := ReadConfig("test-config.yaml")
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return
+	}
+
+    fmt.Println("config: ", config["server"])
+    fmt.Println("config: ", config["database"])
+	fmt.Println("Successfully read config from test-config.yaml")
+}
+
+
 func main() {
     
     testConfigFile()
+    testReadConfigFile()
+
+    writeConfigFile("my-kanban-board.json", getTimeNowString())
     // // Initial data
     // board := KanbanBoard{
     //     ToDo: []Task{
@@ -189,6 +254,9 @@ func main() {
             fmt.Printf("Error: %v\n", err)
             return
         }
+        fmt.Println("config: ", config["server"])
+        fmt.Println("config: ", config["database"])
+	    fmt.Println("Successfully read config from test-config.yaml")
 
         // Print the config map
         fmt.Printf("Config contents: %+v\n", config)
